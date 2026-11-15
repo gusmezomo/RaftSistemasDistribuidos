@@ -1,0 +1,35 @@
+== Passo 2: escrita replicada ==
+# Um put vira uma entrada do log. O líder a envia aos seguidores via
+# AppendEntries e só a confirma (COMMIT) quando a MAIORIA a gravou.
+# O etcdctl redireciona a escrita ao líder automaticamente.
+$ etcdctl put /demo/disciplina Sistemas Distribuidos
+OK
+$ etcdctl put /demo/tema Consenso com Raft
+OK
+$ etcdctl put /demo/dupla Gustavo Mezomo e Pedro Gustavo Thomas
+OK
+
+# Lendo todas as chaves com prefixo /demo:
+$ etcdctl get /demo --prefix
+/demo/disciplina
+Sistemas Distribuidos
+/demo/dupla
+Gustavo Mezomo e Pedro Gustavo Thomas
+/demo/tema
+Consenso com Raft
+
+# Lendo /demo/tema em CADA nó (--consistency=s: leitura local, sem passar pelo líder):
+[etcd1] Consenso com Raft
+[etcd2] Consenso com Raft
+[etcd3] Consenso com Raft
+
+# RAFT INDEX por nó (deve ser igual: todos aplicaram as mesmas entradas):
++-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+|     ENDPOINT      |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+| http://etcd1:2379 | f1a10499d7b3b0d5 |  3.5.17 |   20 kB |      true |      false |         2 |         14 |                 14 |        |
+| http://etcd2:2379 | bc646c6049bc00ba |  3.5.17 |   20 kB |     false |      false |         2 |         14 |                 14 |        |
+| http://etcd3:2379 | b5289a444228e694 |  3.5.17 |   20 kB |     false |      false |         2 |         14 |                 14 |        |
++-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+✔ Dados replicados em todos os nós com o mesmo RAFT INDEX.
+

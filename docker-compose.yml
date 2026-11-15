@@ -1,0 +1,73 @@
+# =============================================================================
+# Demonstração do algoritmo Raft com um cluster etcd de 3 nós.
+# Trabalho de Sistemas Distribuídos (UNISINOS) - Gustavo Mezomo e Pedro Gustavo Thomas
+#
+# O etcd usa o Raft internamente para replicar um log de comandos entre os nós.
+#
+# Parâmetros de tempo do Raft (em milissegundos):
+#   - heartbeat-interval (100 ms): de quanto em quanto tempo o LÍDER envia
+#     mensagens AppendEntries (vazias, se não houver dados) aos seguidores para
+#     provar que está vivo e impedir novas eleições.
+#   - election-timeout (1000 ms): tempo que um SEGUIDOR espera sem ouvir o líder
+#     antes de virar candidato e iniciar uma eleição (term + 1). Na prática o
+#     valor efetivo é sorteado entre 1x e 2x esse valor, para evitar empates.
+#     Regra de bolso: election-timeout >= 10x heartbeat-interval.
+#
+# Por que 3 nós? O Raft exige MAIORIA (quórum) para eleger líder e confirmar
+# (commit) entradas. Com n = 2f+1 nós, o cluster tolera f falhas:
+#   n = 3  =>  f = 1  =>  quórum = 2.  Com 1 nó fora, os 2 restantes ainda
+#   formam maioria; com 2 fora, não há quórum e o cluster para de escrever.
+#
+# Sem portas expostas: todo acesso é feito com `docker exec <nó> etcdctl ...`.
+# =============================================================================
+
+x-etcd-comum: &etcd-comum
+  image: quay.io/coreos/etcd:${ETCD_VERSION:-v3.5.17}
+  restart: "no"            # não reinicia: queremos OBSERVAR a falha
+  networks:
+    - raft-net
+
+x-etcd-ambiente: &etcd-ambiente
+  ETCD_INITIAL_CLUSTER: etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+  ETCD_INITIAL_CLUSTER_STATE: new
+  ETCD_INITIAL_CLUSTER_TOKEN: raft-demo
+  ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+  ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+  ETCD_DATA_DIR: /etcd-data
+  ETCD_HEARTBEAT_INTERVAL: "100"
+  ETCD_ELECTION_TIMEOUT: "1000"
+
+services:
+  etcd1:
+    <<: *etcd-comum
+    container_name: etcd1
+    hostname: etcd1
+    environment:
+      <<: *etcd-ambiente
+      ETCD_NAME: etcd1
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd1:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd1:2380
+
+  etcd2:
+    <<: *etcd-comum
+    container_name: etcd2
+    hostname: etcd2
+    environment:
+      <<: *etcd-ambiente
+      ETCD_NAME: etcd2
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd2:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd2:2380
+
+  etcd3:
+    <<: *etcd-comum
+    container_name: etcd3
+    hostname: etcd3
+    environment:
+      <<: *etcd-ambiente
+      ETCD_NAME: etcd3
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd3:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd3:2380
+
+networks:
+  raft-net:
+    name: raft-net

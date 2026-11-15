@@ -1,0 +1,45 @@
+== Eventos de eleição do Raft (extraídos dos logs) ==
+# became candidate/leader/follower, elected leader, lost leader...
+14:30:29.587831 etcd3 etcd3 became follower at term 0
+14:30:29.587847 etcd3 etcd3 became follower at term 1
+14:30:29.743291 etcd2 etcd2 became follower at term 0
+14:30:29.743308 etcd2 etcd2 became follower at term 1
+14:30:29.886604 etcd1 etcd1 became follower at term 0
+14:30:29.886629 etcd1 etcd1 became follower at term 1
+14:30:30.087994 etcd1 etcd1 became pre-candidate at term 1
+14:30:30.088679 etcd1 etcd1 became candidate at term 2
+14:30:30.098505 etcd3 etcd3 became follower at term 2
+14:30:30.098660 etcd2 etcd2 became follower at term 2
+14:30:30.099464 etcd1 etcd1 became leader at term 2
+14:30:30.099475 etcd1 etcd1 elected leader etcd1 at term 2
+14:30:30.099695 etcd3 etcd3 elected leader etcd1 at term 2
+14:30:30.099802 etcd2 etcd2 elected leader etcd1 at term 2
+14:30:33.988556 etcd3 etcd3 became pre-candidate at term 2
+14:30:33.988621 etcd3 etcd3 lost leader etcd1 at term 2
+14:30:33.989192 etcd3 etcd3 became candidate at term 3
+14:30:33.999538 etcd2 etcd2 became follower at term 3
+14:30:33.999561 etcd2 etcd2 lost leader etcd1 at term 3
+14:30:34.000582 etcd3 etcd3 became leader at term 3
+14:30:34.000594 etcd3 etcd3 elected leader etcd3 at term 3
+14:30:34.000896 etcd2 etcd2 elected leader etcd3 at term 3
+14:30:40.144369 etcd2 etcd2 became pre-candidate at term 3
+14:30:40.144451 etcd2 etcd2 lost leader etcd3 at term 3
+14:30:41.744254 etcd2 etcd2 became pre-candidate at term 3
+14:30:43.344029 etcd2 etcd2 became pre-candidate at term 3
+14:30:44.943814 etcd2 etcd2 became pre-candidate at term 3
+14:30:46.544531 etcd2 etcd2 became pre-candidate at term 3
+14:30:48.144690 etcd2 etcd2 became pre-candidate at term 3
+14:30:48.614326 etcd1 etcd1 became follower at term 2
+14:30:48.803433 etcd3 etcd3 became follower at term 3
+14:30:48.915629 etcd1 etcd1 became pre-candidate at term 2
+14:30:48.916251 etcd1 etcd1 became follower at term 3
+14:30:49.743641 etcd2 etcd2 became pre-candidate at term 3
+14:30:49.744337 etcd2 etcd2 became candidate at term 4
+14:30:49.754368 etcd3 etcd3 became follower at term 4
+14:30:49.754484 etcd1 etcd1 became follower at term 4
+14:30:49.755538 etcd2 etcd2 became leader at term 4
+14:30:49.755548 etcd2 etcd2 elected leader etcd2 at term 4
+14:30:49.755696 etcd1 etcd1 elected leader etcd2 at term 4
+14:30:49.755700 etcd3 etcd3 elected leader etcd2 at term 4
+✔ Demonstração concluída. Para limpar: ./scripts/99-limpar.sh
+

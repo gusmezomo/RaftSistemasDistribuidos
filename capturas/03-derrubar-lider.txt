@@ -1,0 +1,34 @@
+== Passo 3: falha do líder ==
+# Líder atual: etcd1 (term 2).
+# Usamos 'docker kill' (falha abrupta, sem desligamento limpo). Os seguidores
+# deixam de receber heartbeats; ao estourar o election timeout (~1-2 s) um
+# deles vira CANDIDATE com term+1, pede votos e, com maioria, vira LEADER.
+$ docker kill etcd1
+✔ Novo líder: etcd3 | term 2 → 3 | eleição levou 1415 ms
+✔ O term aumentou: cada eleição inicia um novo mandato.
+
+Failed to get the status of endpoint http://etcd1:2379 (context deadline exceeded)
++-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+|     ENDPOINT      |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+| http://etcd2:2379 | bc646c6049bc00ba |  3.5.17 |   20 kB |     false |      false |         3 |         15 |                 15 |        |
+| http://etcd3:2379 | b5289a444228e694 |  3.5.17 |   20 kB |      true |      false |         3 |         15 |                 15 |        |
++-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+Rodando: etcd2 etcd3 
+Parados: etcd1 
+Líder: etcd3 (term 3)
+
+# Os dados continuam disponíveis (estavam commitados na maioria):
+$ etcdctl get /demo --prefix
+/demo/disciplina
+Sistemas Distribuidos
+/demo/dupla
+Gustavo Mezomo e Pedro Gustavo Thomas
+/demo/tema
+Consenso com Raft
+
+# O cluster com 2 nós ainda tem quórum (2 de 3) e aceita escritas:
+$ etcdctl put /demo/depois-da-falha escrito com o lider antigo fora
+OK
+✔ Escrita aceita pelo novo líder.
+
