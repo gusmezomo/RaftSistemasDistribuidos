@@ -13,12 +13,6 @@ Mostrar, na prática, como o Raft funciona dentro do etcd: eleição de líder, 
 
 Raft é um algoritmo de consenso que mantém um **log replicado** consistente entre vários nós. Cada nó é *follower*, *candidate* ou *leader*. O líder recebe as escritas, as replica via **AppendEntries** e só as confirma (**commit**) quando a **maioria (quórum)** gravou. O líder envia **heartbeats**; se um seguidor fica sem ouvi-lo por um **election timeout**, vira candidato e inicia uma eleição num novo **term** (mandato). Exigir maioria impede o **split-brain**: com n = 2f+1 nós, o cluster tolera f falhas (3 nós → 1 falha).
 
-## Requisitos
-
-- Docker + Docker Compose v2
-- bash
-- Linux, macOS ou WSL
-
 ## Estrutura
 
 ```
@@ -41,30 +35,20 @@ raft-etcd-demo/
 
 ## Como rodar
 
-Demo completa (pausa com Enter entre os passos):
+### Requisitos
+
+- Docker + Docker Compose v2
+- bash
+- Linux, macOS ou WSL
+
+Demo completa:
 
 ```bash
 ./scripts/demo.sh
 ```
 
-Sem pausas: `SEM_PAUSA=1 ./scripts/demo.sh`
-
-Passo a passo:
-
-```bash
-./scripts/00-subir.sh
-./scripts/01-status.sh
-./scripts/02-escrever.sh
-./scripts/03-derrubar-lider.sh
-./scripts/04-sem-quorum.sh
-./scripts/05-recuperar.sh
-./scripts/logs-eleicao.sh
-./scripts/99-limpar.sh
-```
-
 **Dica:** deixe `./scripts/observar.sh` aberto em um segundo terminal para ver líder, term e RAFT INDEX mudando ao vivo.
 
-Todo acesso ao cluster é via `docker exec <nó> etcdctl ...` (nenhuma porta é exposta).
 
 ## O que cada passo mostra
 
@@ -81,20 +65,6 @@ Todo acesso ao cluster é via `docker exec <nó> etcdctl ...` (nenhuma porta é 
 ## Capturas de tela
 
 A pasta `capturas/` traz uma imagem (`.png`) e o texto (`.txt`) da saída de cada etapa de uma execução real do `demo.sh`.
-
-## Trocar a versão do etcd
-
-```bash
-ETCD_VERSION=v3.5.16 ./scripts/demo.sh
-```
-
-(Rode `./scripts/99-limpar.sh` antes ao trocar de versão.)
-
-## Solução de problemas
-
-- **Nome de container já em uso:** sobrou um cluster anterior. Rode `./scripts/99-limpar.sh` (ou `docker rm -f etcd1 etcd2 etcd3`).
-- **Imagem não baixa:** verifique a internet e o acesso a `quay.io`; teste `docker pull quay.io/coreos/etcd:v3.5.17`.
-- **Cluster não sobe:** veja `docker compose logs` (na raiz do projeto) e confirme que `99-limpar.sh` foi executado para apagar volumes antigos.
 
 ## Referências
 
