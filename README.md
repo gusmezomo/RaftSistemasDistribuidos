@@ -1,4 +1,4 @@
-# raft-etcd-demo
+# Raft: Exemplo Com Docker
 
 Demonstração prática do algoritmo de consenso **Raft** usando um cluster **etcd de 3 nós** com Docker Compose.
 
