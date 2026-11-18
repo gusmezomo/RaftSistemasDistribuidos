@@ -109,6 +109,11 @@ term_of() {
     | grep -oE '"raft_?[Tt]erm":[0-9]+' | head -n1 | cut -d: -f2 || true
 }
 
+# json_campo <campo> <json>: valor numérico de um campo do `endpoint status -w json`
+json_campo() {
+  { grep -oE "\"$1\":[0-9]+" <<<"$2" | head -n1 | cut -d: -f2; } || true
+}
+
 # status_table: tabela compacta (cabe em 80 colunas) com o que importa para
 # analisar o Raft, uma linha por nó:
 #   PAPEL     LÍDER (segue o líder), seguidor ou "sem líder"
@@ -116,31 +121,44 @@ term_of() {
 #   TERM      mandato atual
 #   RAFT INDEX / APPLIED   última entrada no log / última aplicada
 #   ERRO      erro reportado pelo nó (ex.: "no leader")
+# Usa só arrays indexados e grep/sed (funciona no bash 3.2 do macOS, sem jq).
 status_table() {
-  local n json
-  local -A J=() NOME=()
-  local campos mid lid term idx app err papel segue
-  for n in "${NOS[@]}"; do
+  local i j n json lid mid term idx app err papel segue
+  local UP=() MIDS=() LIDS=() TERMS=() IDXS=() APPS=() ERRS=()
+  for i in "${!NOS[@]}"; do
+    n="${NOS[$i]}"; UP[$i]=0
     if is_running "$n"; then
       json="$(ctl_local "$n" endpoint status -w json 2>/dev/null | filtra || true)"
       if [ -n "$json" ]; then
-        J[$n]="$(jq -r '.[0].Status | [(.header.member_id|tostring), ((.leader // 0)|tostring),
-          (.raftTerm|tostring), (.raftIndex|tostring), (.raftAppliedIndex|tostring),
-          ((.errors // [])|map(sub("^etcdserver: ";""))|join(","))] | @tsv' <<<"$json")"
-        NOME[${J[$n]%%$'\t'*}]="$n"
+        UP[$i]=1
+        MIDS[$i]="$(json_campo member_id "$json")"
+        LIDS[$i]="$(json_campo leader "$json")"
+        TERMS[$i]="$(json_campo raftTerm "$json")"
+        IDXS[$i]="$(json_campo raftIndex "$json")"
+        APPS[$i]="$(json_campo raftAppliedIndex "$json")"
+        ERRS[$i]="$({ grep -o '"errors":\[[^]]*\]' <<<"$json" \
+          | sed -e 's/^"errors":\[//' -e 's/\]$//' -e 's/"etcdserver: //g' -e 's/"//g'; } || true)"
       fi
     fi
   done
   printf '%s%s %-10s %-7s %-5s %-11s %-8s %s%s\n' "$NEGRITO" "NÓ     " "PAPEL" "SEGUE" "TERM" "RAFT INDEX" "APPLIED" "ERRO" "$RESET"
-  for n in "${NOS[@]}"; do
-    if [ -z "${J[$n]:-}" ]; then
+  for i in "${!NOS[@]}"; do
+    n="${NOS[$i]}"
+    if [ "${UP[$i]}" != "1" ]; then
       printf '%-7s %s%s%s\n' "$n" "$VERMELHO" "parado" "$RESET"
       continue
     fi
-    IFS=$'\t' read -r mid lid term idx app err <<<"${J[$n]}"
+    mid="${MIDS[$i]}"; lid="${LIDS[$i]:-0}"; term="${TERMS[$i]}"
+    idx="${IDXS[$i]}"; app="${APPS[$i]}"; err="${ERRS[$i]}"
     if [ "$lid" = "0" ]; then papel="sem líder"; segue="-"
     elif [ "$lid" = "$mid" ]; then papel="LÍDER"; segue="(ele)"
-    else papel="seguidor"; segue="${NOME[$lid]:-?}"; fi
+    else
+      segue="?"
+      for j in "${!NOS[@]}"; do
+        if [ "${UP[$j]}" = "1" ] && [ "${MIDS[$j]}" = "$lid" ]; then segue="${NOS[$j]}"; fi
+      done
+      papel="seguidor"
+    fi
     # preenche o papel por caracteres (printf conta bytes e desalinha acentos)
     printf '%-7s %s%*s %-7s %-5s %-11s %-8s %s\n' "$n" "$papel" $((10 - ${#papel})) "" "$segue" "$term" "$idx" "$app" "$err"
   done
