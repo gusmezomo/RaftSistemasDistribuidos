@@ -109,10 +109,41 @@ term_of() {
     | grep -oE '"raft_?[Tt]erm":[0-9]+' | head -n1 | cut -d: -f2 || true
 }
 
-# status_table: tabela de status dos 3 endpoints (líder, term, índice do log)
+# status_table: tabela compacta (cabe em 80 colunas) com o que importa para
+# analisar o Raft, uma linha por nó:
+#   PAPEL     LÍDER (segue o líder), seguidor ou "sem líder"
+#   SEGUE     quem o nó reconhece como líder ("-" se nenhum)
+#   TERM      mandato atual
+#   RAFT INDEX / APPLIED   última entrada no log / última aplicada
+#   ERRO      erro reportado pelo nó (ex.: "no leader")
 status_table() {
-  # endpoint morto faz o etcdctl sair com erro; toleramos para continuar
-  { ctl endpoint status -w table 2>&1 || true; } | filtra
+  local n json
+  local -A J=() NOME=()
+  local campos mid lid term idx app err papel segue
+  for n in "${NOS[@]}"; do
+    if is_running "$n"; then
+      json="$(ctl_local "$n" endpoint status -w json 2>/dev/null | filtra || true)"
+      if [ -n "$json" ]; then
+        J[$n]="$(jq -r '.[0].Status | [(.header.member_id|tostring), ((.leader // 0)|tostring),
+          (.raftTerm|tostring), (.raftIndex|tostring), (.raftAppliedIndex|tostring),
+          ((.errors // [])|map(sub("^etcdserver: ";""))|join(","))] | @tsv' <<<"$json")"
+        NOME[${J[$n]%%$'\t'*}]="$n"
+      fi
+    fi
+  done
+  printf '%s%s %-10s %-7s %-5s %-11s %-8s %s%s\n' "$NEGRITO" "NÓ     " "PAPEL" "SEGUE" "TERM" "RAFT INDEX" "APPLIED" "ERRO" "$RESET"
+  for n in "${NOS[@]}"; do
+    if [ -z "${J[$n]:-}" ]; then
+      printf '%-7s %s%s%s\n' "$n" "$VERMELHO" "parado" "$RESET"
+      continue
+    fi
+    IFS=$'\t' read -r mid lid term idx app err <<<"${J[$n]}"
+    if [ "$lid" = "0" ]; then papel="sem líder"; segue="-"
+    elif [ "$lid" = "$mid" ]; then papel="LÍDER"; segue="(ele)"
+    else papel="seguidor"; segue="${NOME[$lid]:-?}"; fi
+    # preenche o papel por caracteres (printf conta bytes e desalinha acentos)
+    printf '%-7s %s%*s %-7s %-5s %-11s %-8s %s\n' "$n" "$papel" $((10 - ${#papel})) "" "$segue" "$term" "$idx" "$app" "$err"
+  done
 }
 
 # mostrar_cluster: tabela + nós rodando/parados + líder atual

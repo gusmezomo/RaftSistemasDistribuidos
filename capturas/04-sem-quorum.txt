@@ -1,26 +1,26 @@
-== Passo 4: perda de quórum ==
-# Matamos o líder atual (etcd3). Sobra 1 nó: 1 de 3 NÃO é maioria.
-# O sobrevivente tenta se eleger repetidamente (fase pre-candidate / pre-vote,
-# que evita inflar o term), mas nunca recebe votos suficientes. Sem líder não há commit: isso evita SPLIT-BRAIN (dois
-# líderes aceitando escritas divergentes em partições diferentes).
-$ docker kill etcd3
 
-# Estado visto pelo sobrevivente (etcd2):
-+-----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+-----------------------+
-|       ENDPOINT        |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX |        ERRORS         |
-+-----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+-----------------------+
-| http://127.0.0.1:2379 | bc646c6049bc00ba |  3.5.17 |   20 kB |     false |      false |         3 |         16 |                 16 | etcdserver: no leader |
-+-----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+-----------------------+
+== Passo 4: perda de quórum ==
+# Matamos o líder atual (etcd2). Sobra 1 nó: 1 de 3 NÃO é maioria.
+# O sobrevivente tenta se eleger repetidamente (fase pre-candidate / pre-vote,
+# que evita inflar o term), mas nunca recebe votos suficientes. Sem líder
+# não há commit: isso evita SPLIT-BRAIN (dois líderes aceitando escritas
+# divergentes em partições diferentes).
+$ docker kill etcd2
+
+# Estado visto pelo sobrevivente (etcd1):
+NÓ      PAPEL      SEGUE   TERM  RAFT INDEX  APPLIED  ERRO
+etcd1   sem líder  -       3     16          16       no leader
+etcd2   parado
+etcd3   parado
 
 # Tentando ESCREVER (precisa de quórum):
 $ etcdctl put /demo/sem-quorum x
 ✔ escrita recusada (sem maioria não há commit)
 # Tentando LER de forma linearizável (padrão; exige confirmar com o líder/quórum):
-$ etcdctl get /demo/tema
+$ etcdctl get /demo/universidade
 ✔ leitura linearizável recusada (não dá para garantir o dado mais recente)
 # Leitura serializável (--consistency=s): responde com o dado LOCAL, que pode estar desatualizado:
-$ etcdctl get /demo/tema --consistency=s
-/demo/tema
-Consenso com Raft
+$ etcdctl get /demo/universidade --consistency=s
+/demo/universidade
+UNISINOS
 ✔ leitura local funciona, mas sem garantia de ser a mais recente
-

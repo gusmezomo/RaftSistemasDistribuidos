@@ -9,20 +9,20 @@ nota "Um put vira uma entrada do log. O líder a envia aos seguidores via"
 nota "AppendEntries e só a confirma (COMMIT) quando a MAIORIA a gravou."
 nota "O etcdctl redireciona a escrita ao líder automaticamente."
 
-rodar put /demo/disciplina "Sistemas Distribuidos" | filtra
-rodar put /demo/tema "Consenso com Raft" | filtra
-rodar put /demo/dupla "Gustavo Mezomo e Pedro Gustavo Thomas" | filtra
+rodar put /demo/universidade "UNISINOS" | filtra
+rodar put /demo/autor1 "Gustavo" | filtra
+rodar put /demo/autor2 "Pedro" | filtra
 
 echo
 nota "Lendo todas as chaves com prefixo /demo:"
 rodar get /demo --prefix | filtra
 
 echo
-nota "Lendo /demo/tema em CADA nó (--consistency=s: leitura local, sem passar pelo líder):"
+nota "Lendo /demo/universidade em CADA nó (--consistency=s: leitura local, sem passar pelo líder):"
 for n in "${NOS[@]}"; do
   if is_running "$n"; then
     printf '%s[%s]%s ' "$NEGRITO" "$n" "$RESET"
-    ctl_local "$n" get /demo/tema --consistency=s --print-value-only 2>&1 | filtra
+    ctl_local "$n" get /demo/universidade --consistency=s --print-value-only 2>&1 | filtra
   fi
 done
 

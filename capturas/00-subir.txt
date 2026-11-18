@@ -1,17 +1,14 @@
+
 == Passo 0: subindo o cluster etcd (3 nós) ==
 # Ao iniciar, os 3 nós são FOLLOWERS. Nenhum ouve um líder, então o primeiro
-# cujo election timeout expira vira CANDIDATE (term 1), pede votos e, com a
+# cujo election timeout expira vira CANDIDATE (term 2), pede votos e, com a
 # maioria (2 de 3), vira LEADER. Depois disso envia heartbeats periódicos.
 # Aguardando o primeiro líder ser eleito...
-+-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
-|     ENDPOINT      |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
-+-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
-| http://etcd1:2379 | f1a10499d7b3b0d5 |  3.5.17 |   20 kB |      true |      false |         2 |         11 |                 11 |        |
-| http://etcd2:2379 | bc646c6049bc00ba |  3.5.17 |   20 kB |     false |      false |         2 |         11 |                 11 |        |
-| http://etcd3:2379 | b5289a444228e694 |  3.5.17 |   20 kB |     false |      false |         2 |         11 |                 11 |        |
-+-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+NÓ      PAPEL      SEGUE   TERM  RAFT INDEX  APPLIED  ERRO
+etcd1   seguidor   etcd3   2     11          11       
+etcd2   seguidor   etcd3   2     11          11       
+etcd3   LÍDER      (ele)   2     11          11       
 Rodando: etcd1 etcd2 etcd3 
 Parados: nenhum
-Líder: etcd1 (term 2)
+Líder: etcd3 (term 2)
 ✔ Cluster pronto: um líder eleito e os demais seguidores.
-

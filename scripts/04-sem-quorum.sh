@@ -14,8 +14,9 @@ if [ -z "$lider" ]; then erro "Sem líder atual."; exit 1; fi
 
 nota "Matamos o líder atual ($lider). Sobra 1 nó: 1 de 3 NÃO é maioria."
 nota "O sobrevivente tenta se eleger repetidamente (fase pre-candidate / pre-vote,"
-nota "que evita inflar o term), mas nunca recebe votos suficientes. Sem líder não há commit: isso evita SPLIT-BRAIN (dois"
-nota "líderes aceitando escritas divergentes em partições diferentes)."
+nota "que evita inflar o term), mas nunca recebe votos suficientes. Sem líder"
+nota "não há commit: isso evita SPLIT-BRAIN (dois líderes aceitando escritas"
+nota "divergentes em partições diferentes)."
 printf '%s$ docker kill %s%s\n' "$AMARELO" "$lider" "$RESET"
 docker kill "$lider" >/dev/null
 sleep 3
@@ -23,7 +24,7 @@ sleep 3
 sobrev="$(first_running)"
 echo
 nota "Estado visto pelo sobrevivente ($sobrev):"
-ctl_local "$sobrev" endpoint status -w table 2>&1 | filtra
+status_table
 echo
 
 nota "Tentando ESCREVER (precisa de quórum):"
@@ -35,14 +36,14 @@ else
 fi
 
 nota "Tentando LER de forma linearizável (padrão; exige confirmar com o líder/quórum):"
-printf '%s$ etcdctl get /demo/tema%s\n' "$AMARELO" "$RESET"
-if ctl_local "$sobrev" get /demo/tema >/dev/null 2>&1; then
+printf '%s$ etcdctl get /demo/universidade%s\n' "$AMARELO" "$RESET"
+if ctl_local "$sobrev" get /demo/universidade >/dev/null 2>&1; then
   erro "Inesperado: leitura linearizável funcionou."
 else
   ok "leitura linearizável recusada (não dá para garantir o dado mais recente)"
 fi
 
 nota "Leitura serializável (--consistency=s): responde com o dado LOCAL, que pode estar desatualizado:"
-printf '%s$ etcdctl get /demo/tema --consistency=s%s\n' "$AMARELO" "$RESET"
-ctl_local "$sobrev" get /demo/tema --consistency=s 2>&1 | filtra
+printf '%s$ etcdctl get /demo/universidade --consistency=s%s\n' "$AMARELO" "$RESET"
+ctl_local "$sobrev" get /demo/universidade --consistency=s 2>&1 | filtra
 ok "leitura local funciona, mas sem garantia de ser a mais recente"

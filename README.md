@@ -62,6 +62,10 @@ Demo completa:
 | 05 | Nós religados alcançam o log; RAFT INDEX igual nos 3 | Log matching, catch-up via AppendEntries |
 | logs | Linha do tempo das eleições com nomes dos nós | Pre-vote, candidate, leader, term |
 
+## Vídeo da demonstração
+
+Gravação da execução completa da demo: https://youtu.be/RBIW5EMXUj8
+
 ## Capturas de tela
 
 A pasta `capturas/` traz uma imagem (`.png`) e o texto (`.txt`) da saída de cada etapa de uma execução real do `demo.sh`.

@@ -1,16 +1,14 @@
+
 == Passo 5: recuperação ==
 # Os nós religados voltam como FOLLOWERS, com o log que tinham ao cair.
 # O líder detecta que estão atrasados e reenvia as entradas faltantes via
 # AppendEntries (log matching) até todos terem o mesmo log.
-$ docker start etcd1
+$ docker start etcd2
 $ docker start etcd3
-+-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
-|     ENDPOINT      |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
-+-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
-| http://etcd1:2379 | f1a10499d7b3b0d5 |  3.5.17 |   20 kB |     false |      false |         4 |         22 |                 22 |        |
-| http://etcd2:2379 | bc646c6049bc00ba |  3.5.17 |   20 kB |      true |      false |         4 |         22 |                 22 |        |
-| http://etcd3:2379 | b5289a444228e694 |  3.5.17 |   20 kB |     false |      false |         4 |         22 |                 22 |        |
-+-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+NÓ      PAPEL      SEGUE   TERM  RAFT INDEX  APPLIED  ERRO
+etcd1   seguidor   etcd2   4     22          22       
+etcd2   LÍDER      (ele)   4     22          22       
+etcd3   seguidor   etcd2   4     22          22       
 Rodando: etcd1 etcd2 etcd3 
 Parados: nenhum
 Líder: etcd2 (term 4)
@@ -25,4 +23,3 @@ Líder: etcd2 (term 4)
 [etcd2] escrito com o lider antigo fora
 [etcd3] escrito com o lider antigo fora
 ✔ Todos os nós, inclusive o que estava fora, têm a entrada commitada pelo líder.
-

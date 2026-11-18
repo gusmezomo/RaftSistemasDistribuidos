@@ -1,3 +1,4 @@
+
 == Passo 1: membros e status do cluster ==
 # member list: quem faz parte da configuração do Raft.
 $ etcdctl member list -w table
@@ -9,16 +10,13 @@ $ etcdctl member list -w table
 | f1a10499d7b3b0d5 | started | etcd1 | http://etcd1:2380 | http://etcd1:2379 |      false |
 +------------------+---------+-------+-------------------+-------------------+------------+
 
-# endpoint status: IS LEADER indica o líder; RAFT TERM é o 'mandato' atual
-# (incrementa a cada eleição); RAFT INDEX é a posição no log replicado.
-+-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
-|     ENDPOINT      |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
-+-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
-| http://etcd1:2379 | f1a10499d7b3b0d5 |  3.5.17 |   20 kB |      true |      false |         2 |         11 |                 11 |        |
-| http://etcd2:2379 | bc646c6049bc00ba |  3.5.17 |   20 kB |     false |      false |         2 |         11 |                 11 |        |
-| http://etcd3:2379 | b5289a444228e694 |  3.5.17 |   20 kB |     false |      false |         2 |         11 |                 11 |        |
-+-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+# Status por nó: PAPEL indica o líder; SEGUE é quem o nó reconhece como líder;
+# TERM é o 'mandato' atual (incrementa a cada eleição); RAFT INDEX é a posição
+# no log replicado e APPLIED é até onde o nó já aplicou (commit).
+NÓ      PAPEL      SEGUE   TERM  RAFT INDEX  APPLIED  ERRO
+etcd1   seguidor   etcd3   2     11          11       
+etcd2   seguidor   etcd3   2     11          11       
+etcd3   LÍDER      (ele)   2     11          11       
 Rodando: etcd1 etcd2 etcd3 
 Parados: nenhum
-Líder: etcd1 (term 2)
-
+Líder: etcd3 (term 2)

@@ -8,6 +8,7 @@ titulo "Passo 1: membros e status do cluster"
 nota "member list: quem faz parte da configuração do Raft."
 rodar member list -w table | filtra
 echo
-nota "endpoint status: IS LEADER indica o líder; RAFT TERM é o 'mandato' atual"
-nota "(incrementa a cada eleição); RAFT INDEX é a posição no log replicado."
+nota "Status por nó: PAPEL indica o líder; SEGUE é quem o nó reconhece como líder;"
+nota "TERM é o 'mandato' atual (incrementa a cada eleição); RAFT INDEX é a posição"
+nota "no log replicado e APPLIED é até onde o nó já aplicou (commit)."
 mostrar_cluster
